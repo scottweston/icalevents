@@ -8,6 +8,16 @@ from httplib2 import Http
 default_http = Http('.cache')
 
 
+def skedda_data_fix(content):
+    """
+    Fix Skedda VTIMEZONE bug.
+
+    :param content: content to fix
+    :return: fixed content
+    """
+    return content.replace('DTSTART;VALUE=DATE:20160101', 'DTSTART;VALUE=DATE:20160101T000000')
+
+
 def apple_data_fix(content):
     """
     Fix Apple tzdata bug.
@@ -38,12 +48,13 @@ class ICalDownload:
         self.http = http
         self.encoding = encoding
 
-    def data_from_url(self, url, apple_fix=False):
+    def data_from_url(self, url, apple_fix=False, skedda_fix=False):
         """
         Download iCal data from URL.
 
         :param url: URL to download
         :param apple_fix: fix Apple bugs (protocol type and tzdata in iCal)
+        :param skedda_fix: fix Skedda bugs
         :return: decoded (and fixed) iCal data
         """
         if apple_fix:
@@ -54,7 +65,7 @@ class ICalDownload:
         if not content:
             raise ConnectionError('Could not get data from %s!' % url)
 
-        return self.decode(content, apple_fix=apple_fix)
+        return self.decode(content, apple_fix=apple_fix, skedda_fix=skedda_fix)
 
     def data_from_file(self, file, apple_fix=False):
         """
@@ -78,12 +89,13 @@ class ICalDownload:
 
         return self.decode(string_content, apple_fix=apple_fix)
 
-    def decode(self, content, apple_fix=False):
+    def decode(self, content, apple_fix=False, skedda_fix=False):
         """
         Decode content using the set charset.
 
         :param content: content do decode
-        :param apple_fix: fix Apple txdata bug
+        :param apple_fix: fix Apple tzdata bug
+        :param skedda_fix: fix Skedda VTIMEZONE bug
         :return: decoded (and fixed) content
         """
         content = content.decode(self.encoding)
@@ -91,5 +103,8 @@ class ICalDownload:
 
         if apple_fix:
             content = apple_data_fix(content)
+
+        if skedda_fix:
+            content = skedda_data_fix(content)
 
         return content

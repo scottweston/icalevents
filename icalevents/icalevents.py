@@ -22,6 +22,7 @@ def events(url=None, file=None, string_content=None, start=None, end=None, fix_a
     :param start: start date (see dateutils.date)
     :param end: end date (see dateutils.date)
     :param fix_apple: fix known Apple iCal issues
+    :param fix_skedda: fix known Skedda iCal issues
     :return: events as list of dictionaries
     """
     found_events = []
@@ -29,21 +30,22 @@ def events(url=None, file=None, string_content=None, start=None, end=None, fix_a
     content = None
 
     if url:
-        content = ICalDownload().data_from_url(url, apple_fix=fix_apple)
+        content = ICalDownload().data_from_url(url, apple_fix=fix_apple, skedda_fix=fix_skedda)
 
     if not content and file:
-        content = ICalDownload().data_from_file(file, apple_fix=fix_apple)
+        content = ICalDownload().data_from_file(file, apple_fix=fix_apple, skedda_fix=fix_skedda)
 
     if not content and string_content:
         content = ICalDownload().data_from_string(string_content,
-                                                  apple_fix=fix_apple)
+                                                  apple_fix=fix_apple,
+                                                  skedda_fix=fix_skedda)
 
     found_events += parse_events(content, start=start, end=end)
 
     return found_events
 
 
-def request_data(key, url, file, string_content, start, end, fix_apple):
+def request_data(key, url, file, string_content, start, end, fix_apple, fix_skedda):
     """
     Request data, update local data cache and remove this Thread form queue.
 
@@ -54,19 +56,20 @@ def request_data(key, url, file, string_content, start, end, fix_apple):
     :param start: start date
     :param end: end date
     :param fix_apple: fix known Apple iCal issues
+    :param fix_skedda: fix known Skedda iCal issues
     """
     data = []
 
     try:
         data += events(url=url, file=file, string_content=string_content,
-                       start=start, end=end, fix_apple=fix_apple)
+                       start=start, end=end, fix_apple=fix_apple, fix_skedda=fix_skedda)
     finally:
         update_events(key, data)
         request_finished(key)
 
 
 def events_async(key, url=None, file=None, start=None, string_content=None,
-                 end=None, fix_apple=False):
+                 end=None, fix_apple=False, fix_skedda=False):
     """
     Trigger an asynchronous data request.
 
@@ -77,8 +80,9 @@ def events_async(key, url=None, file=None, start=None, string_content=None,
     :param start: start date
     :param end: end date
     :param fix_apple: fix known Apple iCal issues
+    :param fix_skedda: fix known Skedda iCal issues
     """
-    t = Thread(target=request_data, args=(key, url, file, string_content, start, end, fix_apple))
+    t = Thread(target=request_data, args=(key, url, file, string_content, start, end, fix_apple, fix_skedda))
 
     with event_lock:
         if key not in threads:
