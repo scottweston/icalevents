@@ -12,7 +12,7 @@ event_store = {}
 threads = {}
 
 
-def events(url=None, file=None, string_content=None, start=None, end=None, fix_apple=False):
+def events(url=None, file=None, string_content=None, start=None, end=None, fix_apple=False, fix_skedda=False):
     """
     Get all events form the given iCal URL occurring in the given time range.
 
